@@ -1,0 +1,40 @@
+# === Секреты (никогда не коммитить!) ===
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+secrets.json
+
+# === n8n ===
+**/workflow-with-creds.json
+n8n-data/
+.n8n/
+
+# === Node.js ===
+node_modules/
+npm-debug.log*
+
+# === Python ===
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# === Данные и бэкапы ===
+*.sqlite
+*.db
+backups/
+*.dump
+
+# === ОС и редакторы ===
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
+*.swp
+
+# === Логи ===
+*.log
+logs/
