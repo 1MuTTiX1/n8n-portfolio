@@ -1,0 +1,571 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8,
+              "triggerAtMinute": 30
+            },
+            {
+              "triggerAtHour": 17,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -288,
+        0
+      ],
+      "id": "cc4818f4-df5e-42fc-85b3-64d1b01fa98b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_ids }}",
+        "text": "=Погода в городе {{ $('HTTP Request1').item.json.results[0].name }},\nТемпература: {{ $('Code in JavaScript').item.json.current_weather.temperature }} {{ $('Code in JavaScript').item.json.current_weather_units.temperature }},\nНебо: {{ $('Code in JavaScript').item.json.condition_ru }}.\n{{ $('Message All').item.json.masege }}\n{{ $json.output }}\n\n",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2160,
+        -32
+      ],
+      "id": "5f1349d3-ded2-4e61-b8c3-7e9ce1f156b8",
+      "name": "Send a text message",
+      "webhookId": "6ac42342-b299-4d84-a459-323a51cbe126",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "={{ $json.results[0].latitude }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ $json.results[0].longitude }}"
+            },
+            {
+              "name": "current_weather",
+              "value": "true"
+            },
+            {
+              "name": "timezone",
+              "value": "auto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        128,
+        0
+      ],
+      "id": "8e9263a6-76ed-4500-a2cd-f46a9ed9bf63",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const weatherCodes = {\n  0: \"Ясно\",\n  1: \"Преимущественно ясно\",\n  2: \"Переменная облачность\",\n  3: \"Пасмурно\",\n  45: \"Туман\",\n  48: \"Осаждающийся туман\",\n  51: \"Легкая морось\",\n  53: \"Умеренная морось\",\n  55: \"Плотная морось\",\n  61: \"Небольшой дождь\",\n  63: \"Умеренный дождь\",\n  65: \"Сильный дождь\",\n  71: \"Небольшой снег\",\n  73: \"Умеренный снег\",\n  75: \"Сильный снег\",\n  80: \"Небольшой ливень\",\n  81: \"Умеренный ливень\",\n  82: \"Сильный ливень\",\n  95: \"Гроза\",\n  96: \"Гроза с небольшим градом\",\n  99: \"Гроза с сильным градом\"\n};\n\nfor (const item of $input.all()) {\n  const code = item.json.current_weather.weathercode;\n  item.json.condition_ru = weatherCodes[code] || \"Неизвестно (\" + code + \")\";\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        0
+      ],
+      "id": "bcf75f8c-ff3c-48a8-9b52-fd9285560d11",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5a2db923-f717-4be5-a9b3-3610a8108244",
+              "leftValue": "={{ $json.current_weather.windspeed }}",
+              "rightValue": "={{20}}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        0
+      ],
+      "id": "c84cce8a-f58b-422d-be0a-be64a03bfeba",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "https://geocoding-api.open-meteo.com/v1/search?name=Саратов&count=1&language=ru&format=json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "51.5333"
+            },
+            {
+              "name": "longitude",
+              "value": "46.0333"
+            },
+            {
+              "name": "current_weather",
+              "value": "true"
+            },
+            {
+              "name": "timezone",
+              "value": "auto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -96,
+        0
+      ],
+      "id": "1e410d2a-8cef-4910-8834-a888aec4188a",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "weather_history",
+          "mode": "list",
+          "cachedResultName": "weather_history"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "temperature": "={{ $json.current_weather.temperature }}",
+            "windspeed": "={{ $('Code in JavaScript').item.json.current_weather.windspeed }}",
+            "condition": "={{ $('Code in JavaScript').item.json.condition_ru }}",
+            "city": "={{ $('HTTP Request1').item.json.results[0].name }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "temperature",
+              "displayName": "temperature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "condition",
+              "displayName": "condition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "windspeed",
+              "displayName": "windspeed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1200,
+        -224
+      ],
+      "id": "f2b006d0-969f-4658-b8a5-bf4148f0ec5d",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ты — саркастичный синоптик. Твоя задача — выдать ОДНУ короткую фразу (максимум 12 слов) про погоду.\n\nЖЁСТКИЕ ПРАВИЛА:\n- Ровно одно предложение. Точка в конце. Никаких многоточий.\n- Максимум 12 слов. Посчитай про себя.\n- Никаких вступлений, объяснений, рассуждений.\n- Только готовый текст, без кавычек.\n\nФормула: [Погода] + [неожиданный вывод про человека].\n\nПримеры (НЕ копируй их, придумай своё):\n+5 и дождь — идеально, чтобы вспомнить, зачем ты купил зонт.\nСолнце в Саратове — редкий гость, встречай его как родню.\nВетер 3 км/ч — даже листья не парятся о твоих проблемах.\n\nДанные:\nТемпература: {{ $json.current_weather.temperature }}\nПогода: {{ $json.condition_ru }}\nВетер: {{ $('HTTP Request').item.json.current_weather.windspeed }} км/ч",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1280,
+        -32
+      ],
+      "id": "d48e174e-9ee7-4f7c-8bbf-091709288c8f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:1.5b",
+        "options": {
+          "temperature": 0.8,
+          "topP": 0.9,
+          "numPredict": 40,
+          "repeatPenalty": 1.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        192
+      ],
+      "id": "00b157a1-b7d5-4032-85d6-910c7932a556",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "nd0mCsvuFEDmhGQF",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "396e4a7b-d6c1-4b72-8f73-6895b6eff244",
+              "name": "chat_ids",
+              "value": "[1991368397, 6659984653]",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1616,
+        -32
+      ],
+      "id": "482221b2-c6c4-4fb4-9d8d-4f09831d0663",
+      "name": "Manual Mapping"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "chat_ids",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        -32
+      ],
+      "id": "03b47c64-4a18-4059-9094-2c43eb5d6f98",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c46e13cb-1dc6-4670-a245-51dbf1649ded",
+              "name": "masege",
+              "value": "=💨 Внимание! Ветер {{ $json.current_weather.windspeed }} км/ч. Оденься теплее!",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        720,
+        -96
+      ],
+      "id": "3f02d36e-203f-46e1-bb96-6ee10277e5ca",
+      "name": "message windy"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        960,
+        -32
+      ],
+      "id": "77831d74-56e0-45d1-a01e-66338a775d3d",
+      "name": "Message All"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "85652d4a-2e8f-4da8-9bfb-74a035678994",
+              "name": "masege",
+              "value": "=Ветер  {{ $json.current_weather.windspeed }} км/ч.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        720,
+        48
+      ],
+      "id": "bbe8aab7-b19d-4e75-aaff-740dec902c21",
+      "name": "Message Calm"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "message windy",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message Calm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Manual Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Mapping": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "message windy": {
+      "main": [
+        [
+          {
+            "node": "Message All",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message All": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message Calm": {
+      "main": [
+        [
+          {
+            "node": "Message All",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "609e824b00665571f6a6381130c664f746b0bb62dba57c9df8bd5baf812c788b"
+  }
+}
