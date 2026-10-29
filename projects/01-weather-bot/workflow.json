@@ -2,32 +2,8 @@
   "nodes": [
     {
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "triggerAtHour": 8,
-              "triggerAtMinute": 30
-            },
-            {
-              "triggerAtHour": 17,
-              "triggerAtMinute": 30
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.4,
-      "position": [
-        -288,
-        0
-      ],
-      "id": "cc4818f4-df5e-42fc-85b3-64d1b01fa98b",
-      "name": "Schedule Trigger"
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $json.chat_ids }}",
-        "text": "=Погода в городе {{ $('HTTP Request1').item.json.results[0].name }},\nТемпература: {{ $('Code in JavaScript').item.json.current_weather.temperature }} {{ $('Code in JavaScript').item.json.current_weather_units.temperature }},\nНебо: {{ $('Code in JavaScript').item.json.condition_ru }}.\n{{ $('Message All').item.json.masege }}\n{{ $json.output }}\n\n",
+        "chatId": "={{ $('Telegram Trigger1').item.json.callback_query.from.id }}",
+        "text": "🌤 Погода в Саратове: +20°C, ясно! (Это тест)",
         "additionalFields": {
           "appendAttribution": false
         }
@@ -35,12 +11,12 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2160,
-        -32
+        4464,
+        2432
       ],
-      "id": "5f1349d3-ded2-4e61-b8c3-7e9ce1f156b8",
-      "name": "Send a text message",
-      "webhookId": "6ac42342-b299-4d84-a459-323a51cbe126",
+      "id": "f273f0c8-b115-41c5-9a34-ac4207a767e6",
+      "name": "Send Weather",
+      "webhookId": "2ce1df44-4837-4eff-bf4b-ab29b84dbfc1",
       "credentials": {
         "telegramApi": {
           "id": "wV0J3WxBWKkrfMR0",
@@ -50,216 +26,158 @@
     },
     {
       "parameters": {
-        "url": "https://api.open-meteo.com/v1/forecast",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
+        "chatId": "={{ $('Telegram Trigger1').item.json.callback_query.from.id }}",
+        "text": "⚙️ Здесь будут настройки времени и уведомлений.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4464,
+        2592
+      ],
+      "id": "d7bc19c8-dc3f-47df-8aba-600e79401782",
+      "name": "Send Settings",
+      "webhookId": "17ab9648-96a9-402b-9345-37fbb9509b4e",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        3536,
+        2304
+      ],
+      "id": "38814cf3-6d44-44e6-80c3-05d06740fd99",
+      "name": "Telegram Trigger1",
+      "webhookId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
             {
-              "name": "latitude",
-              "value": "={{ $json.results[0].latitude }}"
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message ? $json.message.text : '' }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "401e5e8a-5ede-4a46-99c4-b7c6bd77f852"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Start"
             },
             {
-              "name": "longitude",
-              "value": "={{ $json.results[0].longitude }}"
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message ? $json.message.text : '' }}",
+                    "rightValue": "🏠 Главное меню",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "45364544-f04d-41c4-805f-41c3c1ee7aba"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reply Menu"
             },
             {
-              "name": "current_weather",
-              "value": "true"
-            },
-            {
-              "name": "timezone",
-              "value": "auto"
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query ? $json.callback_query.data : '' }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "85251b18-0003-480a-b1ae-8fabb96a25ff"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Inline Clicks"
             }
           ]
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.5,
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
       "position": [
-        128,
-        0
+        3728,
+        2272
       ],
-      "id": "8e9263a6-76ed-4500-a2cd-f46a9ed9bf63",
-      "name": "HTTP Request"
+      "id": "63538a30-e3c5-4145-a2af-81bc552c8f26",
+      "name": "Main Router1",
+      "alwaysOutputData": false
     },
     {
       "parameters": {
-        "jsCode": "const weatherCodes = {\n  0: \"Ясно\",\n  1: \"Преимущественно ясно\",\n  2: \"Переменная облачность\",\n  3: \"Пасмурно\",\n  45: \"Туман\",\n  48: \"Осаждающийся туман\",\n  51: \"Легкая морось\",\n  53: \"Умеренная морось\",\n  55: \"Плотная морось\",\n  61: \"Небольшой дождь\",\n  63: \"Умеренный дождь\",\n  65: \"Сильный дождь\",\n  71: \"Небольшой снег\",\n  73: \"Умеренный снег\",\n  75: \"Сильный снег\",\n  80: \"Небольшой ливень\",\n  81: \"Умеренный ливень\",\n  82: \"Сильный ливень\",\n  95: \"Гроза\",\n  96: \"Гроза с небольшим градом\",\n  99: \"Гроза с сильным градом\"\n};\n\nfor (const item of $input.all()) {\n  const code = item.json.current_weather.weathercode;\n  item.json.condition_ru = weatherCodes[code] || \"Неизвестно (\" + code + \")\";\n}\n\nreturn $input.all();"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        320,
-        0
-      ],
-      "id": "bcf75f8c-ff3c-48a8-9b52-fd9285560d11",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "5a2db923-f717-4be5-a9b3-3610a8108244",
-              "leftValue": "={{ $json.current_weather.windspeed }}",
-              "rightValue": "={{20}}",
-              "operator": {
-                "type": "number",
-                "operation": "gt"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        496,
-        0
-      ],
-      "id": "c84cce8a-f58b-422d-be0a-be64a03bfeba",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "url": "https://geocoding-api.open-meteo.com/v1/search?name=Саратов&count=1&language=ru&format=json",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "latitude",
-              "value": "51.5333"
-            },
-            {
-              "name": "longitude",
-              "value": "46.0333"
-            },
-            {
-              "name": "current_weather",
-              "value": "true"
-            },
-            {
-              "name": "timezone",
-              "value": "auto"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.5,
-      "position": [
-        -96,
-        0
-      ],
-      "id": "1e410d2a-8cef-4910-8834-a888aec4188a",
-      "name": "HTTP Request1"
-    },
-    {
-      "parameters": {
-        "schema": {
-          "__rl": true,
-          "mode": "list",
-          "value": "public"
-        },
-        "table": {
-          "__rl": true,
-          "value": "weather_history",
-          "mode": "list",
-          "cachedResultName": "weather_history"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "temperature": "={{ $json.current_weather.temperature }}",
-            "windspeed": "={{ $('Code in JavaScript').item.json.current_weather.windspeed }}",
-            "condition": "={{ $('Code in JavaScript').item.json.condition_ru }}",
-            "city": "={{ $('HTTP Request1').item.json.results[0].name }}"
-          },
-          "matchingColumns": [
-            "id"
-          ],
-          "schema": [
-            {
-              "id": "id",
-              "displayName": "id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "city",
-              "displayName": "city",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "temperature",
-              "displayName": "temperature",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "condition",
-              "displayName": "condition",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "windspeed",
-              "displayName": "windspeed",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "created_at",
-              "displayName": "created_at",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "dateTime",
-              "canBeUsedToMatch": true,
-              "removed": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
+        "operation": "executeQuery",
+        "query": "SELECT \n    id, \n    CASE name\n        WHEN 'Москва' THEN 'Москва'\n        WHEN 'Санкт-Петербург' THEN 'Санкт-Петербург'\n        WHEN 'Краснодарский' THEN 'Краснодар'\n        WHEN 'Саратовская' THEN 'Саратов'\n        WHEN 'Новосибирская' THEN 'Новосибирск'\n        ELSE name\n    END AS name\nFROM ru_locations\nWHERE type = 'region' \n  AND name IN ('Москва', 'Санкт-Петербург', 'Краснодарский', 'Саратовская', 'Новосибирская')\nORDER BY CASE name \n    WHEN 'Москва' THEN 1 \n    WHEN 'Санкт-Петербург' THEN 2 \n    WHEN 'Краснодарский' THEN 3 \n    WHEN 'Саратовская' THEN 4 \n    WHEN 'Новосибирская' THEN 5 \n    ELSE 6 \nEND;",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.7,
       "position": [
-        1200,
-        -224
+        4464,
+        2256
       ],
-      "id": "f2b006d0-969f-4658-b8a5-bf4148f0ec5d",
-      "name": "Insert rows in a table",
+      "id": "52241577-b1a3-4a68-9f15-fb502eb22f84",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": false,
       "credentials": {
         "postgres": {
           "id": "GIcsXcHw4VI3qrlm",
@@ -269,167 +187,653 @@
     },
     {
       "parameters": {
-        "promptType": "define",
-        "text": "=Ты — саркастичный синоптик. Твоя задача — выдать ОДНУ короткую фразу (максимум 12 слов) про погоду.\n\nЖЁСТКИЕ ПРАВИЛА:\n- Ровно одно предложение. Точка в конце. Никаких многоточий.\n- Максимум 12 слов. Посчитай про себя.\n- Никаких вступлений, объяснений, рассуждений.\n- Только готовый текст, без кавычек.\n\nФормула: [Погода] + [неожиданный вывод про человека].\n\nПримеры (НЕ копируй их, придумай своё):\n+5 и дождь — идеально, чтобы вспомнить, зачем ты купил зонт.\nСолнце в Саратове — редкий гость, встречай его как родню.\nВетер 3 км/ч — даже листья не парятся о твоих проблемах.\n\nДанные:\nТемпература: {{ $json.current_weather.temperature }}\nПогода: {{ $json.condition_ru }}\nВетер: {{ $('HTTP Request').item.json.current_weather.windspeed }} км/ч",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        1280,
-        -32
-      ],
-      "id": "d48e174e-9ee7-4f7c-8bbf-091709288c8f",
-      "name": "AI Agent"
-    },
-    {
-      "parameters": {
-        "model": "qwen2.5:1.5b",
-        "options": {
-          "temperature": 0.8,
-          "topP": 0.9,
-          "numPredict": 40,
-          "repeatPenalty": 1.2
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "🏠 Главное меню бота:",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "➕ Добавить город",
+                    "additionalFields": {
+                      "callback_data": "add_city"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🌤 Актуальная погода",
+                    "additionalFields": {
+                      "callback_data": "weather"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "⚙️ Настройки",
+                    "additionalFields": {
+                      "callback_data": "settings"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
         }
       },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
-        1280,
-        192
+        3920,
+        2192
       ],
-      "id": "00b157a1-b7d5-4032-85d6-910c7932a556",
-      "name": "Ollama Chat Model",
+      "id": "f97d4bc8-7a7e-43ad-94d8-d703a691f1fe",
+      "name": "Main menu",
+      "webhookId": "df524813-3c32-42f3-8bb7-4a0e197e8a6b",
       "credentials": {
-        "ollamaApi": {
-          "id": "nd0mCsvuFEDmhGQF",
-          "name": "Ollama account"
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
         }
       }
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
+        "chatId": "={{ $json.message.from.id }}",
+        "text": "=👋 Привет! Я бот для отслеживания погоды.",
+        "replyMarkup": "replyKeyboard",
+        "replyKeyboard": {
+          "rows": [
             {
-              "id": "396e4a7b-d6c1-4b72-8f73-6895b6eff244",
-              "name": "chat_ids",
-              "value": "[1991368397, 6659984653]",
-              "type": "array"
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Главное меню",
+                    "additionalFields": {}
+                  }
+                ]
+              }
             }
           ]
         },
-        "includeOtherFields": true,
-        "options": {}
+        "replyKeyboardOptions": {
+          "resize_keyboard": true
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
-        1616,
-        -32
+        3888,
+        2016
       ],
-      "id": "482221b2-c6c4-4fb4-9d8d-4f09831d0663",
-      "name": "Manual Mapping"
+      "id": "102db300-13b1-4a83-9a5b-cb8868a4f691",
+      "name": "Start message",
+      "webhookId": "0cf74132-e212-418f-9afb-3125b2fd5ab6",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
-        "fieldToSplitOut": "chat_ids",
-        "include": "allOtherFields",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [
-        1872,
-        -32
-      ],
-      "id": "03b47c64-4a18-4059-9094-2c43eb5d6f98",
-      "name": "Split Out"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
+        "chatId": "={{ $json.result.chat.id }}",
+        "text": "🏠 Главное меню бота:",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
             {
-              "id": "c46e13cb-1dc6-4670-a245-51dbf1649ded",
-              "name": "masege",
-              "value": "=💨 Внимание! Ветер {{ $json.current_weather.windspeed }} км/ч. Оденься теплее!",
-              "type": "string"
+              "row": {
+                "buttons": [
+                  {
+                    "text": "➕ Добавить город",
+                    "additionalFields": {
+                      "callback_data": "add_city"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🌤 Актуальная погода",
+                    "additionalFields": {
+                      "callback_data": "weather"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "⚙️ Настройки",
+                    "additionalFields": {
+                      "callback_data": "settings"
+                    }
+                  }
+                ]
+              }
             }
           ]
         },
-        "includeOtherFields": true,
-        "options": {}
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
-        720,
-        -96
+        4128,
+        2016
       ],
-      "id": "3f02d36e-203f-46e1-bb96-6ee10277e5ca",
-      "name": "message windy"
+      "id": "a18ac597-fed8-498c-86ca-a547198fb326",
+      "name": "Mane menu 1",
+      "webhookId": "df524813-3c32-42f3-8bb7-4a0e197e8a6b",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": []
-        },
-        "includeOtherFields": true,
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        960,
-        -32
-      ],
-      "id": "77831d74-56e0-45d1-a01e-66338a775d3d",
-      "name": "Message All"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
+        "operation": "editMessageText",
+        "chatId": "={{ $('Telegram Trigger1').item.json.callback_query.from.id }}",
+        "messageId": "={{ $('Telegram Trigger1').item.json.callback_query.message.message_id }}",
+        "replyMarkup": "inlineKeyboard",
+        "text": "🏠 Главное меню бота:",
+        "inlineKeyboard": {
+          "rows": [
             {
-              "id": "85652d4a-2e8f-4da8-9bfb-74a035678994",
-              "name": "masege",
-              "value": "=Ветер  {{ $json.current_weather.windspeed }} км/ч.",
-              "type": "string"
+              "row": {
+                "buttons": [
+                  {
+                    "text": "=➕ Добавить город",
+                    "additionalFields": {
+                      "callback_data": "=add_city"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "=🌤 Актуальная погода",
+                    "additionalFields": {
+                      "callback_data": "=weather"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "=⚙️ Настройки",
+                    "additionalFields": {
+                      "callback_data": "=settings"
+                    }
+                  }
+                ]
+              }
             }
           ]
         },
-        "includeOtherFields": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4224,
+        2544
+      ],
+      "id": "733a6ec3-0c7c-4bd9-94a9-f302024f2d83",
+      "name": "Back to mane menu",
+      "webhookId": "df0e8199-8c99-4114-8fca-895a9d60b172",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "districts_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "5ab1bd9d-2880-40ef-90c0-81f31873958b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Districts"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ce95aae2-26fa-46f9-a792-2cff66ddb312",
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "city_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "City Selected"
+            }
+          ]
+        },
         "options": {}
       },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
       "position": [
-        720,
-        48
+        4224,
+        2944
       ],
-      "id": "bbe8aab7-b19d-4e75-aaff-740dec902c21",
-      "name": "Message Calm"
+      "id": "77587b71-3e13-4f8d-85ed-3d5088e2563a",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger1').item.json.callback_query.data }}",
+                    "rightValue": "add_city",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "151dc316-0acf-49ba-8b47-8a0dcf12cdf6"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Add City"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger1').item.json.callback_query.data }}",
+                    "rightValue": "weather",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "dee902b3-f4b4-4f14-b802-dee5c21efc20"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Weather"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger1').item.json.callback_query.data }}",
+                    "rightValue": "settings",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c9919423-1167-4260-8508-480aacf9ebea"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Settings"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        4240,
+        2272
+      ],
+      "id": "7baec113-e9be-4080-bb19-0085a73474b1",
+      "name": "Action Router"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger1').item.json.callback_query.data }}",
+                    "rightValue": "back_to_menu",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "592fdbc8-981e-460f-a066-af6c2475f142"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Back"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        4032,
+        2544
+      ],
+      "id": "2a03e93b-0070-4240-aa1e-87bc2141a6e6",
+      "name": "Back",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name, type\nFROM ru_locations\nWHERE parent_id = CAST('{{ $('Telegram Trigger1').item.json.callback_query.data.split('_')[1] }}' AS INTEGER)\nORDER BY \n    CASE type \n        WHEN 'district' THEN 1 \n        WHEN 'city' THEN 2 \n        WHEN 'city_district' THEN 3\n        ELSE 4 \n    END,\n    name\nLIMIT 6 OFFSET (CAST('{{ $('Telegram Trigger1').item.json.callback_query.data.split('_')[2] }}' AS INTEGER) - 1) * 5;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        4528,
+        2928
+      ],
+      "id": "b45afef1-0765-4878-a10f-122ab549a5f8",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst inlineKeyboard = []; // Создаем массив для строк\nlet currentRow = [];\n\nfor (let i = 0; i < items.length; i++) {\n    const region = items[i].json;\n    \n    // Создаем ПЛОСКУЮ кнопку, как в вашем идеальном JSON\n    currentRow.push({\n        text: region.name,\n        callback_data: `districts_${region.id}_1`\n    });\n\n    if (currentRow.length === 2) {\n        inlineKeyboard.push(currentRow);\n        currentRow = [];\n    }\n}\n\nif (currentRow.length > 0) {\n    inlineKeyboard.push(currentRow);\n}\n\n// Кнопки ввода и назад\ninlineKeyboard.push([{ text: \"✏️ Ввести свой город\", callback_data: \"type_custom_city\" }]);\ninlineKeyboard.push([{ text: \"⬅️ Назад в меню\", callback_data: \"back_to_menu\" }]);\n\nreturn [{\n    json: {\n        chat_id: $('Telegram Trigger1').item.json.callback_query.message.chat.id,\n        text: \"🌍 Выберите город из списка или введите свой:\",\n        // Формируем объект ТОЧНО как в вашем скриншоте\n        reply_markup: { \n            inline_keyboard: inlineKeyboard \n        }\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4672,
+        2256
+      ],
+      "id": "c5a3f3c2-2630-497d-b74f-ed44bdfe018d",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $('Telegram Trigger1').item.json.callback_query.message.message_id }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "inlineKeyboardJSON",
+        "inlineKeyboardJSON": "={{ JSON.stringify($json.reply_markup.inline_keyboard) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-telegram-dim.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        4896,
+        2256
+      ],
+      "id": "ad3d7aea-42c6-47e6-a559-cae910e7eaec",
+      "name": "Telegram JSON Inline Menu",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst hasNext = items.length > 5;\nconst locations = hasNext ? items.slice(0, 5) : items;\n\nconst inlineKeyboard = [];\nlet currentRow = [];\n\nfor (let i = 0; i < locations.length; i++) {\n    const loc = locations[i].json;\n    \n    // Добавляем иконку: 🏙 для районов, 📍 для городов\n    const icon = loc.type === 'district' ? '🏙 ' : '📍 ';\n    \n    currentRow.push({\n        text: `${icon}${loc.name}`,\n        callback_data: `loc_${loc.id}_${loc.type}` \n    });\n    \n    if (currentRow.length === 2) {\n        inlineKeyboard.push(currentRow);\n        currentRow = [];\n    }\n}\nif (currentRow.length > 0) inlineKeyboard.push(currentRow);\n\n// Пагинация (кнопка Дальше)\nconst currentData = $('Telegram Trigger1').item.json.callback_query.data;\nconst parts = currentData.split('_');\nconst regionId = parts[1];\nconst page = parseInt(parts[2]);\n\nif (hasNext) {\n    // Добавляем только ОДНУ кнопку Дальше\n    inlineKeyboard.push([{ text: \"➡️ Дальше\", callback_data: `districts_${regionId}_${page + 1}` }]);\n}\n\ninlineKeyboard.push([{ text: \"⬅️ Назад к регионам\", callback_data: \"add_city\" }]);\n\nreturn [{\n    json: {\n        chat_id: $('Telegram Trigger1').item.json.callback_query.message.chat.id,\n        text: \"📍 Выберите район или город:\",\n        reply_markup: { inline_keyboard: inlineKeyboard }\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4752,
+        2928
+      ],
+      "id": "938f7512-eebd-4f08-abf3-0885a066ebd8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $('Telegram Trigger1').item.json.callback_query.message.message_id }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "inlineKeyboardJSON",
+        "inlineKeyboardJSON": "={{ JSON.stringify($json.reply_markup.inline_keyboard) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-telegram-dim.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5024,
+        2928
+      ],
+      "id": "0b4770e3-4c03-4096-a267-3ecab6506af1",
+      "name": "Telegram JSON Inline Menu2",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
     }
   ],
   "connections": {
-    "Schedule Trigger": {
+    "Telegram Trigger1": {
       "main": [
         [
           {
-            "node": "HTTP Request1",
+            "node": "Main Router1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send a text message": {
+    "Main Router1": {
       "main": [
-        []
+        [
+          {
+            "node": "Start message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Main menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Action Router",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Back",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "HTTP Request": {
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start message": {
+      "main": [
+        [
+          {
+            "node": "Mane menu 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Router": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Weather",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Back": {
+      "main": [
+        [
+          {
+            "node": "Back to mane menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
       "main": [
         [
           {
@@ -440,122 +844,22 @@
         ]
       ]
     },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Telegram JSON Inline Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Code in JavaScript": {
       "main": [
         [
           {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "message windy",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Message Calm",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request1": {
-      "main": [
-        [
-          {
-            "node": "HTTP Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Manual Mapping",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ollama Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Manual Mapping": {
-      "main": [
-        [
-          {
-            "node": "Split Out",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Out": {
-      "main": [
-        [
-          {
-            "node": "Send a text message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "message windy": {
-      "main": [
-        [
-          {
-            "node": "Message All",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Message All": {
-      "main": [
-        [
-          {
-            "node": "Insert rows in a table",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "AI Agent",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Message Calm": {
-      "main": [
-        [
-          {
-            "node": "Message All",
+            "node": "Telegram JSON Inline Menu2",
             "type": "main",
             "index": 0
           }
