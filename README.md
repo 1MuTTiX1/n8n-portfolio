@@ -7,7 +7,7 @@
 **Имя Фамилия** — AI Automation Engineer.
 Специализация: n8n, AI-агенты, RAG, PostgreSQL, Docker.
 
-- 📧 Email: 149588467+1MuTTiX1@users.noreply.github.com
+- 📧 Email: 
 - 💬 Telegram: [@username](https://t.me/username)
 - 🌐 GitHub: [github.com/1MuTTiX1](https://github.com/1MuTTiX1)
 
