@@ -3,8 +3,7 @@
 Экспорт адресных объектов ГАР (уровни 1..6) в CSV-файлы. БД не нужна.
 Только стандартные библиотеки Python 3.8+.
 
-    python export_gar.py --gar E:\\GAR_DATA\\gar_xml --out E:\\GAR_DATA\\csv --regions 64
-    python export_gar.py --gar E:\\GAR_DATA\\gar_xml --out E:\\GAR_DATA\\csv --merge
+    python parse_gar.py --gar C:\path\to\gar_xml --out C:\path\to\csv --merge
 
 Результат: по одному файлу на регион (ru_locations_64.csv, ...).
 Уже готовые регионы при повторном запуске пропускаются (--force пересоздаёт).
