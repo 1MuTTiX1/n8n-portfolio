@@ -1,0 +1,2263 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1552,
+        -48
+      ],
+      "id": "2e8a1409-df21-4cb9-87a9-7af2873a4c24",
+      "name": "Telegram Trigger",
+      "webhookId": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message ? $json.message.text : '' }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "401e5e8a-5ede-4a46-99c4-b7c6bd77f852"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Start"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message ? $json.message.text : '' }}",
+                    "rightValue": "🏠 Главное меню",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "45364544-f04d-41c4-805f-41c3c1ee7aba"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reply Menu"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query ? $json.callback_query.data : '' }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "85251b18-0003-480a-b1ae-8fabb96a25ff"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Inline Clicks"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1360,
+        -80
+      ],
+      "id": "ed35d77a-d480-4f11-828e-d43b85ebc128",
+      "name": "Main Router",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, name\nFROM ru_locations\nWHERE is_popular\nORDER BY sort_order;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -624,
+        -96
+      ],
+      "id": "76d1ce58-bfcd-4446-8511-40b2b733edac",
+      "name": "Get Popular Cities",
+      "alwaysOutputData": false,
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "🏠 Главное меню бота:",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "➕ Добавить город",
+                    "additionalFields": {
+                      "callback_data": "add_city"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🌤 Актуальная погода",
+                    "additionalFields": {
+                      "callback_data": "weather"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "⚙️ Настройки",
+                    "additionalFields": {
+                      "callback_data": "settings"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1168,
+        -160
+      ],
+      "id": "f5da3420-642b-4761-a6a7-7ffcafc8af66",
+      "name": "Send Main Menu",
+      "webhookId": "df524813-3c32-42f3-8bb7-4a0e197e8a6b",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.from.id }}",
+        "text": "=👋 Привет! Я бот для отслеживания погоды.",
+        "replyMarkup": "replyKeyboard",
+        "replyKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Главное меню",
+                    "additionalFields": {}
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "replyKeyboardOptions": {
+          "resize_keyboard": true
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        -336
+      ],
+      "id": "71b00868-9e45-43d5-bf03-d641d1e4ec54",
+      "name": "Send Welcome",
+      "webhookId": "0cf74132-e212-418f-9afb-3125b2fd5ab6",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.result.chat.id }}",
+        "text": "🏠 Главное меню бота:",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "➕ Добавить город",
+                    "additionalFields": {
+                      "callback_data": "add_city"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🌤 Актуальная погода",
+                    "additionalFields": {
+                      "callback_data": "weather"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "⚙️ Настройки",
+                    "additionalFields": {
+                      "callback_data": "settings"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        -336
+      ],
+      "id": "fcdee1fc-52d8-472c-99f0-8aaca746ffbf",
+      "name": "Send Main Menu After Start",
+      "webhookId": "8f449475-b7eb-408b-a7ef-c9411bc99bd6",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Telegram Trigger').item.json.callback_query.from.id }}",
+        "messageId": "={{ $('Telegram Trigger').item.json.callback_query.message.message_id }}",
+        "replyMarkup": "inlineKeyboard",
+        "text": "🏠 Главное меню бота:",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "=➕ Добавить город",
+                    "additionalFields": {
+                      "callback_data": "=add_city"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "=🌤 Актуальная погода",
+                    "additionalFields": {
+                      "callback_data": "=weather"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "=⚙️ Настройки",
+                    "additionalFields": {
+                      "callback_data": "=settings"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -864,
+        208
+      ],
+      "id": "da83c6ef-3d29-4257-bded-e72db2d3cf35",
+      "name": "Edit To Main Menu",
+      "webhookId": "df0e8199-8c99-4114-8fca-895a9d60b172",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "d_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "5ab1bd9d-2880-40ef-90c0-81f31873958b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Districts"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ce95aae2-26fa-46f9-a792-2cff66ddb312",
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "s_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Select"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -864,
+        608
+      ],
+      "id": "cae465d8-6117-4d7f-909d-aea2d51a3ac0",
+      "name": "Location Router"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger').item.json.callback_query.data }}",
+                    "rightValue": "add_city",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "151dc316-0acf-49ba-8b47-8a0dcf12cdf6"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Add City"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger').item.json.callback_query.data }}",
+                    "rightValue": "weather",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    },
+                    "id": "dee902b3-f4b4-4f14-b802-dee5c21efc20"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Weather"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger').item.json.callback_query.data }}",
+                    "rightValue": "settings",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c9919423-1167-4260-8508-480aacf9ebea"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Settings"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "dc8dcd7c-3bef-4e57-b424-f8908bc0d302",
+                    "leftValue": "={{ $('Telegram Trigger').item.json.callback_query.data }}",
+                    "rightValue": "get_weather_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Get Weather"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -848,
+        -80
+      ],
+      "id": "14beff99-23eb-44bf-b939-a6979b67baf4",
+      "name": "Action Router"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger').item.json.callback_query.data }}",
+                    "rightValue": "back_to_menu",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "592fdbc8-981e-460f-a066-af6c2475f142"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Back"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1056,
+        208
+      ],
+      "id": "c5e07942-57cc-4f3d-a17a-415dfe36bd67",
+      "name": "Back Button Router",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT l.id, l.name, c.id AS city_id, c.name AS city_name\nFROM ru_locations c\nJOIN ru_locations l ON l.parent_id = c.id AND l.kind = 'city_district'\nWHERE c.id = $1::uuid\nORDER BY l.name\nLIMIT 9 OFFSET $2::int;",
+        "options": {
+          "queryReplacement": "={{ [ $('Telegram Trigger').first().json.callback_query.data.split('_')[1], (parseInt($('Telegram Trigger').first().json.callback_query.data.split('_')[2]) || 0) * 8 ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -560,
+        512
+      ],
+      "id": "34d22c76-ece8-4336-abcd-22344f722620",
+      "name": "Get Districts",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst rows = [];\nlet row = [];\nfor (const it of items) {\n  const c = it.json;\n  row.push({ text: c.name, callback_data: `d_${c.id}_0` });\n  if (row.length === 2) { rows.push(row); row = []; }\n}\nif (row.length) rows.push(row);\nrows.push([{ text: \"🏠 Главное меню\", callback_data: \"back_to_menu\" }]);\n\nconst cb = $('Telegram Trigger').first().json.callback_query;\nreturn [{\n  json: {\n    chat_id: cb.message.chat.id,\n    text: \"🌍 Выберите город:\",\n    reply_markup: { inline_keyboard: rows }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        -96
+      ],
+      "id": "0c3c4b88-ea09-4d64-887c-798ec417dbe4",
+      "name": "Build Cities Keyboard"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $('Telegram Trigger').item.json.callback_query.message.message_id }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "inlineKeyboardJSON",
+        "inlineKeyboardJSON": "={{ JSON.stringify($json.reply_markup.inline_keyboard) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-telegram-dim.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        -96
+      ],
+      "id": "0b2d19e7-b268-4f45-8c94-236f145b30e9",
+      "name": "Show Cities",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const PAGE = 8;\nconst cb = $('Telegram Trigger').first().json.callback_query;\nconst parts = cb.data.split('_');\nconst cityId = parts[1];\nconst page = parseInt(parts[2]) || 0;\n\nconst items = $input.all().map(i => i.json).filter(r => r.id);\nconst hasNext = items.length > PAGE;\nconst list = hasNext ? items.slice(0, PAGE) : items;\nconst cityName = list.length ? list[0].city_name : null;\n\nconst rows = [];\nrows.push([{\n  text: cityName ? `📍 Весь город ${cityName}` : \"📍 Выбрать этот город\",\n  callback_data: `s_${cityId}`\n}]);\n\nlet row = [];\nfor (const d of list) {\n  row.push({ text: `${d.name}`, callback_data: `s_${d.id}` });\n  if (row.length === 2) { rows.push(row); row = []; }\n}\nif (row.length) rows.push(row);\n\nconst nav = [];\nif (page > 0) nav.push({ text: \"⬅️ Назад\", callback_data: `d_${cityId}_${page - 1}` });\nif (hasNext) nav.push({ text: \"Дальше ➡️\", callback_data: `d_${cityId}_${page + 1}` });\nif (nav.length) rows.push(nav);\nrows.push([{ text: \"⬅️ К городам\", callback_data: \"add_city\" }]);\n\nconst text = cityName\n  ? `📍 ${cityName}: выберите район или весь город`\n  : \"📍 Для этого города районов нет. Можно выбрать его целиком.\";\n\nreturn [{\n  json: {\n    chat_id: cb.message.chat.id,\n    text,\n    reply_markup: { inline_keyboard: rows }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        512
+      ],
+      "id": "4a51190e-52dc-4cc4-931d-9f137f04b1d9",
+      "name": "Build Districts Keyboard"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $('Telegram Trigger').item.json.callback_query.message.message_id }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "inlineKeyboardJSON",
+        "inlineKeyboardJSON": "={{ JSON.stringify($json.reply_markup.inline_keyboard) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-telegram-dim.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        512
+      ],
+      "id": "c01c6310-c309-464f-84bb-b755ef9f2d4e",
+      "name": "Show Districts",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH u AS (\n  INSERT INTO bot_users (telegram_id) VALUES ($1::bigint)\n  ON CONFLICT (telegram_id) DO NOTHING\n),\nloc AS (\n  SELECT l.id, l.name, p.name AS parent_name\n  FROM ru_locations l LEFT JOIN ru_locations p ON p.id = l.parent_id\n  WHERE l.id = $2::uuid\n),\nins AS (\n  INSERT INTO user_locations (telegram_id, location_id, is_primary)\n  SELECT $1::bigint, loc.id,\n         NOT EXISTS (SELECT 1 FROM user_locations WHERE telegram_id = $1::bigint)\n  FROM loc\n  ON CONFLICT DO NOTHING\n  RETURNING location_id\n)\nSELECT loc.name, loc.parent_name, (SELECT count(*) FROM ins) AS added FROM loc;",
+        "options": {
+          "queryReplacement": "={{ [ $('Telegram Trigger').first().json.callback_query.from.id, $('Telegram Trigger').first().json.callback_query.data.split('_')[1] ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -560,
+        720
+      ],
+      "id": "d9d3a299-e86f-4447-9196-1a715a1516c8",
+      "name": "Save User Location",
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT l.id, l.name AS city_name, l.kind, p.name AS parent_name\nFROM user_locations ul\nJOIN ru_locations l ON l.id = ul.location_id\nLEFT JOIN ru_locations p ON p.id = l.parent_id\nWHERE ul.telegram_id = $1::bigint\nORDER BY ul.is_primary DESC, l.name\nLIMIT 6 OFFSET $2::int;",
+        "options": {
+          "queryReplacement": "={{ [ $('Telegram Trigger').first().json.callback_query.from.id, (parseInt($('Telegram Trigger').first().json.callback_query.data.split('_')[1]) || 0) * 5 ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -624,
+        80
+      ],
+      "id": "5adb5f7a-e5f4-48c9-bbdf-5ec3275df2eb",
+      "name": "Get User Locations",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().filter(i => i.json && i.json.id);\nconst cb = $('Telegram Trigger').first().json.callback_query;\nconst page = parseInt(cb.data.split('_')[1]) || 0;\nconst hasNext = items.length > 5;\nconst list = hasNext ? items.slice(0, 5) : items;\n\nif (list.length === 0 && page === 0) {\n    return [{\n        json: {\n            chat_id: cb.message.chat.id,\n            text: \"У вас пока нет добавленных городов.\",\n            reply_markup: { inline_keyboard: [[{ text: \"➕ Добавить город\", callback_data: \"add_city\" }]] }\n        }\n    }];\n}\n\nconst rows = [];\nfor (const item of list) {\n    // Проверяем kind вместо type\n    const isDistrict = item.json.kind === 'city_district' || item.json.kind === 'district';\n    \n    const btnText = (isDistrict && item.json.parent_name) \n        ? `${item.json.city_name} (${item.json.parent_name})` \n        : `${item.json.city_name}`;\n\n    rows.push([{\n        text: btnText,\n        callback_data: `get_weather_${item.json.id}` \n    }]);\n}\n\n// Пагинация\nconst nav = [];\nif (page > 0) nav.push({ text: \"⬅️ Назад\", callback_data: `weather_${page - 1}` });\nif (hasNext) nav.push({ text: \"Дальше ➡️\", callback_data: `weather_${page + 1}` });\nif (nav.length) rows.push(nav);\nrows.push([{ text: \"🏠 Главное меню\", callback_data: \"back_to_menu\" }]);\n\nreturn [{\n    json: {\n        chat_id: cb.message.chat.id,\n        text: \"🌤 *Выберите город, чтобы узнать погоду:*\",\n        reply_markup: { inline_keyboard: rows }\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        96
+      ],
+      "id": "0b1e9a7e-e14b-4fd0-b3ce-1d6f463011d0",
+      "name": "Build Weather List Keyboard"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $('Telegram Trigger').item.json.callback_query.message.message_id }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "inlineKeyboardJSON",
+        "inlineKeyboardJSON": "={{ JSON.stringify($json.reply_markup.inline_keyboard) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-telegram-dim.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        192
+      ],
+      "id": "5a6b1ec3-b841-473c-9f43-ba7bcd877ad7",
+      "name": "Show Weather List",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT l.id, l.name, l.kind, l.name_prep, l.lat, l.lon,\n       p.name AS parent_name, p.type_name AS parent_type,\n       p.lat AS parent_lat, p.lon AS parent_lon,\n       (l.parent_id = l.region_id) AS parent_is_region,\n       r.name AS region_name, r.type_name AS region_type\nFROM ru_locations l\nLEFT JOIN ru_locations p ON p.id = l.parent_id\nLEFT JOIN ru_locations r ON r.id = l.region_id\nWHERE l.id = $1::uuid;",
+        "options": {
+          "queryReplacement": "={{ [ $('Telegram Trigger').first().json.callback_query.data.split('_')[2] ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        128,
+        96
+      ],
+      "id": "18cf6903-08d3-49ab-88d6-b1e5e4268677",
+      "name": "Get Location Data",
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "35e87a54-375a-4eb6-b742-d70eb238f57c",
+              "leftValue": "={{ $json.lat !== null && $json.lat !== undefined }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        320,
+        96
+      ],
+      "id": "4753ccb8-d38d-450b-92c0-4abacb5ed2f3",
+      "name": "Has Own Coords?"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "={{ $json.lat }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ $json.lon }}"
+            },
+            {
+              "name": "current_weather",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        592,
+        96
+      ],
+      "id": "a3664fc4-1583-4d91-b328-825b20f5b230",
+      "name": "Get Weather (Open-Meteo)",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const loc = $('Get Location Data').first().json;\nconst chatId = $('Telegram Trigger').first().json.callback_query.message.chat.id;\n// Legacy Markdown: экранировать внутри *жирного* нельзя, поэтому служебные символы просто убираем\nconst clean = s => String(s == null ? '' : s).replace(/[_*`\\[\\]]/g, ' ').trim();\n\nconst WMO = {\n  0: ['☀️', 'Ясно'], 1: ['🌤', 'Преимущественно ясно'], 2: ['⛅', 'Переменная облачность'], 3: ['☁️', 'Пасмурно'],\n  45: ['🌫', 'Туман'], 48: ['🌫', 'Изморозевый туман'],\n  51: ['🌦', 'Лёгкая морось'], 53: ['🌦', 'Морось'], 55: ['🌧', 'Сильная морось'],\n  56: ['🌧', 'Ледяная морось'], 57: ['🌧', 'Сильная ледяная морось'],\n  61: ['🌦', 'Небольшой дождь'], 63: ['🌧', 'Дождь'], 65: ['🌧', 'Сильный дождь'],\n  66: ['🌧', 'Ледяной дождь'], 67: ['🌧', 'Сильный ледяной дождь'],\n  71: ['🌨', 'Небольшой снег'], 73: ['🌨', 'Снег'], 75: ['❄️', 'Сильный снег'], 77: ['🌨', 'Снежные зёрна'],\n  80: ['🌦', 'Небольшой ливень'], 81: ['🌧', 'Ливень'], 82: ['⛈', 'Сильный ливень'],\n  85: ['🌨', 'Небольшой снегопад'], 86: ['❄️', 'Сильный снегопад'],\n  95: ['⛈', 'Гроза'], 96: ['⛈', 'Гроза с градом'], 99: ['⛈', 'Сильная гроза с градом']\n};\n\nconst res = ($input.first() || {}).json || {};\nconst cw = res.current_weather;\nlet text;\nif (!cw || cw.temperature === undefined) {\n  text = `⚠️ Не удалось получить погоду для ${clean(loc.name)}. Попробуйте позже.`;\n} else {\n  const temp = Math.round(cw.temperature);\n  const wind = Math.round(cw.windspeed);\n  const [emoji, desc] = WMO[cw.weathercode] || ['🌡', `Код погоды ${cw.weathercode}`];\n\n  // Склонение берём из базы (колонка name_prep: «в Саратове», «в Заводском районе»)\n  const title = loc.name_prep ? `Погода ${clean(loc.name_prep)}` : `Погода: ${clean(loc.name)}`;\n  let suffix = '';\n  if (loc.parent_name && !loc.parent_is_region && ['city_district', 'locality', 'settlement', 'district'].includes(loc.kind)) {\n    const pt = String(loc.parent_type || '').toLowerCase();\n    suffix = ` (${clean(loc.parent_name)}${pt.startsWith('р-н') ? ' район' : ''})`;\n  }\n\n  let usedParent = false;\n  try { usedParent = $('Use Parent Coords').isExecuted === true; } catch (e) { usedParent = false; }\n\n  text = `🌤 *${title}${suffix}*\\n\\n${emoji} ${desc}, ${temp > 0 ? '+' : ''}${temp}°C\\n💨 Ветер: ${wind} км/ч`;\n  if (usedParent) text += `\\n\\n_ℹ️ Координаты района не найдены, показана погода по городу._`;\n}\nreturn [{ json: { chat_id: chatId, text } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        96
+      ],
+      "id": "e73f2146-9ef3-4b2e-a67e-4473ea3213cc",
+      "name": "Format Weather"
+    },
+    {
+      "parameters": {
+        "url": "https://nominatim.openstreetmap.org/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.q }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            },
+            {
+              "name": "limit",
+              "value": "1"
+            },
+            {
+              "name": "countrycodes",
+              "value": "ru"
+            },
+            {
+              "name": "accept-language",
+              "value": "ru"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "WeatherBot/1.0"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        768,
+        416
+      ],
+      "id": "2a1afb3f-f8e1-4cff-9502-71d2297441c4",
+      "name": "Geocode Nominatim",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const first = ($input.first() || {}).json || {};\nconst lat = parseFloat(first.lat);\nconst lon = parseFloat(first.lon);\nif (!first.error && Number.isFinite(lat) && Number.isFinite(lon)) {\n  return [{ json: { found: true, lat, lon, source: 'nominatim' } }];\n}\nreturn [{ json: { found: false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        416
+      ],
+      "id": "bad8e96b-a20b-4690-a007-8117133b7448",
+      "name": "Pick Nominatim Result"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE ru_locations\nSET lat = $2::float8, lon = $3::float8, coord_source = $4, updated_at = now()\nWHERE id = $1::uuid\nRETURNING lat, lon;",
+        "options": {
+          "queryReplacement": "={{ [ $('Get Location Data').first().json.id, $json.lat, $json.lon, $json.source ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1984,
+        400
+      ],
+      "id": "918d01f8-61aa-41cd-bd1c-abce7752b0e0",
+      "name": "Save Coords To DB",
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $('Telegram Trigger').first().json.callback_query.message.message_id }}",
+        "replyMarkup": "inlineKeyboard",
+        "text": "={{ $json.text }}",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "⬅️ Назад",
+                    "additionalFields": {
+                      "callback_data": "weather"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Главное меню",
+                    "additionalFields": {
+                      "callback_data": "back_to_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1040,
+        96
+      ],
+      "id": "89d10db6-33b2-4c6b-bb69-18d18b0e9d90",
+      "name": "Show Weather",
+      "webhookId": "37ebfe92-0ee7-4e38-a71e-2d2fadc47107",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const loc = $('Get Location Data').first().json;\nconst norm = s => String(s || '').toLowerCase().replace(/ё/g, 'е').trim();\n\nconst regionFull = (name, type) => {\n  const t = norm(type);\n  if (!name) return '';\n  if (t.startsWith('аобл')) return `${name} автономная область`;\n  if (t.startsWith('обл')) return `${name} область`;\n  if (t.startsWith('край')) return `${name} край`;\n  if (t.startsWith('респ')) return `Республика ${name}`;\n  if (t === 'ао') return `${name} автономный округ`;\n  return name;\n};\n\nconst parts = [loc.name];\nif (loc.parent_name && !loc.parent_is_region) {\n  parts.push(norm(loc.parent_type).startsWith('р-н') ? `${loc.parent_name} район` : loc.parent_name);\n}\nconst region = regionFull(loc.region_name, loc.region_type);\nif (region) parts.push(region);\n\nconst seen = new Set();\nconst uniq = parts.filter(p => { const k = norm(p); if (!k || seen.has(k)) return false; seen.add(k); return true; });\n\nreturn [{ json: {\n  q: uniq.join(', '),\n  name: loc.name,\n  region_name: loc.region_name || '',\n  parent_name: (!loc.parent_is_region && norm(loc.parent_type).startsWith('р-н')) ? loc.parent_name : ''\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        416
+      ],
+      "id": "72b81101-12e9-4e70-aa1d-03e113c52a67",
+      "name": "Build Geocode Query"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c4089b20-538d-4675-b1f6-78e6ff0aa693",
+              "leftValue": "={{ $json.found === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        416
+      ],
+      "id": "e8f0c226-ed7b-4481-911f-125c8dbdc114",
+      "name": "Nominatim Found?"
+    },
+    {
+      "parameters": {
+        "url": "https://geocoding-api.open-meteo.com/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $('Build Geocode Query').first().json.name }}"
+            },
+            {
+              "name": "count",
+              "value": "20"
+            },
+            {
+              "name": "language",
+              "value": "ru"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            },
+            {
+              "name": "countryCode",
+              "value": "RU"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        608
+      ],
+      "id": "30f59ab5-c91c-4a8b-b75d-d6b73394bfe2",
+      "name": "Geocode Open-Meteo",
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Build Geocode Query').first().json;\nconst body = ($input.first() || {}).json || {};\nconst results = Array.isArray(body.results) ? body.results : [];\nconst norm = s => String(s || '').toLowerCase().replace(/ё/g, 'е').trim();\nconst stem = s => norm(s).slice(0, 5).trim();\n\n// 1) то же название, 2) тот же регион (иначе можно получить одноимённое место за тысячу км)\nlet c = results.filter(r => norm(r.name) === norm(ctx.name));\nif (ctx.region_name) c = c.filter(r => norm(r.admin1).includes(stem(ctx.region_name)));\n// 3) если известен район, предпочитаем совпадение по нему\nif (ctx.parent_name) {\n  const byParent = c.filter(r => norm(r.admin2).includes(stem(ctx.parent_name)));\n  if (byParent.length) c = byParent;\n}\nif (!c.length || !Number.isFinite(c[0].latitude) || !Number.isFinite(c[0].longitude)) {\n  return [{ json: { found: false } }];\n}\nreturn [{ json: { found: true, lat: c[0].latitude, lon: c[0].longitude, source: 'open-meteo' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1536,
+        608
+      ],
+      "id": "cf708073-d9c6-410c-bf69-2cd39bb5a477",
+      "name": "Pick Open-Meteo Result"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c11efb90-da8d-4b85-a7c0-2b85154df225",
+              "leftValue": "={{ $json.found === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1712,
+        608
+      ],
+      "id": "18534a98-1ea7-4fe2-af27-88583628f36c",
+      "name": "Open-Meteo Found?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c649477b-6837-47db-9355-2bc335c9237c",
+              "leftValue": "={{ $('Get Location Data').first().json.parent_lat !== null && $('Get Location Data').first().json.parent_lat !== undefined }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1920,
+        704
+      ],
+      "id": "2cb4406e-01bf-4c53-9b0b-f0db75c0b0b2",
+      "name": "Has Parent Coords?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const loc = $('Get Location Data').first().json;\nreturn [{ json: { lat: loc.parent_lat, lon: loc.parent_lon } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        560
+      ],
+      "id": "3eaafd77-5c98-45b1-a560-f3ee01da21af",
+      "name": "Use Parent Coords"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Telegram Trigger').first().json.callback_query.message.chat.id }}",
+        "messageId": "={{ $('Telegram Trigger').first().json.callback_query.message.message_id }}",
+        "replyMarkup": "inlineKeyboard",
+        "text": "={{ '⚠️ Не удалось определить координаты: ' + $('Get Location Data').first().json.name + '. Попробуйте позже или выберите другое место.' }}",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "⬅️ К списку",
+                    "additionalFields": {
+                      "callback_data": "weather"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Главное меню",
+                    "additionalFields": {
+                      "callback_data": "back_to_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2192,
+        736
+      ],
+      "id": "c5addc02-f90e-4b27-bb65-0aa87648535a",
+      "name": "Show Coords Error",
+      "webhookId": "6cd778af-9df7-44cb-a83b-a1e1005e8f43",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d024b6f9-638b-49eb-9f8a-75b16a217006",
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "my_cities",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "List of cities"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "bb052a40-290b-4adf-be34-d2f87a675877",
+                    "leftValue": "={{ $json.callback_query.data }}",
+                    "rightValue": "del_",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Delete City"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        1264
+      ],
+      "id": "3e86456c-74ff-46f2-bba3-896c832cc33e",
+      "name": "Settings Router"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Telegram Trigger').first().json.callback_query.message.chat.id }}",
+        "messageId": "={{ $('Telegram Trigger').first().json.callback_query.message.message_id }}",
+        "replyMarkup": "inlineKeyboard",
+        "text": "={{ ($json.added > 0 ? '✅ Добавлено: ' : 'ℹ️ Уже был добавлен ранее: ') + $json.name + ($json.parent_name ? ' (' + $json.parent_name + ')' : '') }}",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "➕ Добавить ещё",
+                    "additionalFields": {
+                      "callback_data": "add_city"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠 Главное меню",
+                    "additionalFields": {
+                      "callback_data": "back_to_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -352,
+        720
+      ],
+      "id": "8aff23c2-b1e8-4abb-9556-36e8f7b7a3c2",
+      "name": "Confirm Location Saved",
+      "webhookId": "6d2af15f-f7b6-4cb3-9435-aa9d9d6d3729",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $('Telegram Trigger').first().json.callback_query.message.chat.id }}",
+        "messageId": "={{ $('Telegram Trigger').first().json.callback_query.message.message_id }}",
+        "replyMarkup": "inlineKeyboard",
+        "text": "=✅ Город удален из вашего списка.",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "⬅️ Назад к списку",
+                    "additionalFields": {
+                      "callback_data": "my_cities"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "⬅️ Назад в меню",
+                    "additionalFields": {
+                      "callback_data": "back_to_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -384,
+        944
+      ],
+      "id": "21e51f3f-8d07-442f-8a89-99b7a2dd0c49",
+      "name": "Confirm Delete City",
+      "webhookId": "939890bb-26d4-41c9-b23e-9e1de6a77774",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT l.id, l.name AS city_name, l.kind, p.name AS parent_name\nFROM user_locations ul\nJOIN ru_locations l ON l.id = ul.location_id\nLEFT JOIN ru_locations p ON p.id = l.parent_id\nWHERE ul.telegram_id = $1::bigint\nORDER BY l.name\nLIMIT 6 OFFSET $2::int;",
+        "options": {
+          "queryReplacement": "={{ [ $('Telegram Trigger').first().json.callback_query.from.id, (parseInt($('Telegram Trigger').first().json.callback_query.data.split('_')[2]) || 0) * 5 ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -640,
+        1104
+      ],
+      "id": "c127aa22-4303-4aae-94aa-07b78038a5ab",
+      "name": "Get Cities For Deletion",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Берем данные ИЗ ВХОДЯЩЕГО УЗЛА (SQL)\nconst items = $input.all().filter(i => i.json && i.json.id);\nconst cb = $('Telegram Trigger').first().json.callback_query;\n\n// 2. Получаем страницу (my_cities_1 -> 1, my_cities -> 0)\nconst page = parseInt(cb.data.replace('my_cities_', '').replace('my_cities', '')) || 0;\n\n// 3. Формируем список (максимум 5)\nconst hasNext = items.length > 5;\nconst list = hasNext ? items.slice(0, 5) : items;\n\nif (list.length === 0 && page === 0) {\n    return [{\n        json: {\n            chat_id: cb.message.chat.id,\n            text: \"У вас пока нет добавленных городов.\",\n            reply_markup: { inline_keyboard: [[{ text: \"➕ Добавить город\", callback_data: \"add_city\" }]] }\n        }\n    }];\n}\n\nconst rows = [];\n\n// 4. Кнопки удаления\nfor (const item of list) {\n    const loc = item.json;\n    const isDistrict = loc.kind === 'city_district' || loc.kind === 'district';\n    const title = (isDistrict && loc.parent_name) ? `${loc.city_name} (${loc.parent_name})` : `${loc.city_name}`;\n    \n    rows.push([{ text: `❌ Удалить: ${title}`, callback_data: `del_${loc.id}` }]);\n}\n\n// 5. ПАГИНАЦИЯ\nconst nav = [];\n// Если мы не на первой странице, добавляем кнопку \"Назад\"\nif (page > 0) {\n    nav.push({ text: \"⬅️ Назад\", callback_data: `my_cities_${page - 1}` });\n}\n// Если есть еще данные, добавляем \"Дальше\"\nif (hasNext) {\n    nav.push({ text: \"Дальше ➡️\", callback_data: `my_cities_${page + 1}` });\n}\n// Если есть хоть одна кнопка навигации, добавляем её в общий список\nif (nav.length) {\n    rows.push(nav);\n}\n\n// 6. Кнопка возврата в настройки\nrows.push([{ text: \"⬅️ Назад в настройки\", callback_data: \"settings\" }]);\n\n// 7. Невидимый символ\nconst hiddenChar = \"\\u200B\";\n\nreturn [{\n    json: {\n        chat_id: cb.message.chat.id,\n        text: `🗑 *Выберите город, который нужно удалить:*\\n${hiddenChar}`,\n        reply_markup: { inline_keyboard: rows }\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        1104
+      ],
+      "id": "2f352d0e-cc56-4293-ab7b-f9e7192b88d1",
+      "name": "Build Delete List Keyboard"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $('Telegram Trigger').item.json.callback_query.message.message_id }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "inlineKeyboardJSON",
+        "inlineKeyboardJSON": "={{ JSON.stringify($json.reply_markup.inline_keyboard) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-telegram-dim.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        1104
+      ],
+      "id": "21a10d03-e280-49f5-9383-490ad82cefa5",
+      "name": "Show Delete List",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM user_locations\nWHERE telegram_id = $1::bigint AND location_id = $2::uuid;",
+        "options": {
+          "queryReplacement": "={{ [ $('Telegram Trigger').first().json.callback_query.from.id, $('Telegram Trigger').first().json.callback_query.data.split('_')[1] ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -640,
+        944
+      ],
+      "id": "1d0d7e36-6726-4933-b635-1afcccd7fec1",
+      "name": "Delete User Location",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.callback_query.from.id }}",
+        "messageId": "={{ $json.callback_query.message.message_id }}",
+        "replyMarkup": "inlineKeyboard",
+        "text": "={{'⚙️ Настройки:     ⠀'}}",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📍 Список городов",
+                    "additionalFields": {
+                      "callback_data": "my_cities"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🔔 Уведомления",
+                    "additionalFields": {
+                      "callback_data": "notify"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🏠  Назад в меню",
+                    "additionalFields": {
+                      "callback_data": "back_to_menu"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -624,
+        288
+      ],
+      "id": "db4085d2-6b8c-4643-b651-fa465997b24f",
+      "name": "Show Settings",
+      "webhookId": "b2587690-fbb0-4dc0-bf5c-ee48f955327d",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "942d2730-c24c-4d87-a556-c9494791161a",
+                    "leftValue": "={{ /^(nm_|nd_|ne_|ntoggle|ntz_)/.test($json.callback_query.data) }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Changes"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "09b136d3-2ad3-4311-9ebe-2119b87b3375",
+                    "leftValue": "={{ /^(notify|nt_|na_|nh_|ntz$)/.test($json.callback_query.data) }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Views"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        1616
+      ],
+      "id": "e0290f01-628f-4250-ae3c-71bfa5b5381f",
+      "name": "Notify Router"
+    },
+    {
+      "parameters": {
+        "jsCode": "const TZ = [\n  { id: 'Europe/Kaliningrad', label: 'Калининград (МСК-1)' },\n  { id: 'Europe/Moscow', label: 'Москва (МСК)' },\n  { id: 'Europe/Samara', label: 'Самара, Саратов (МСК+1)' },\n  { id: 'Asia/Yekaterinburg', label: 'Екатеринбург (МСК+2)' },\n  { id: 'Asia/Omsk', label: 'Омск (МСК+3)' },\n  { id: 'Asia/Krasnoyarsk', label: 'Красноярск, Новосибирск (МСК+4)' },\n  { id: 'Asia/Irkutsk', label: 'Иркутск (МСК+5)' },\n  { id: 'Asia/Yakutsk', label: 'Якутск (МСК+6)' },\n  { id: 'Asia/Vladivostok', label: 'Владивосток (МСК+7)' },\n  { id: 'Asia/Magadan', label: 'Магадан (МСК+8)' },\n  { id: 'Asia/Kamchatka', label: 'Камчатка (МСК+9)' }\n];\nconst cb = $('Telegram Trigger').first().json.callback_query;\nconst d = String(cb.data || '');\nconst UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nconst out = { act: 'none', tg: String(cb.from.id), loc: '', t: '', nid: '', tz: '' };\n\nif (d === 'ntoggle') {\n  out.act = 'toggle';\n} else if (d.startsWith('ntz_')) {\n  const z = TZ[parseInt(d.slice(4), 10)];\n  if (z) { out.act = 'tz'; out.tz = z.id; }\n} else if (d.startsWith('nm_')) {            // nm_<uuid>_<HHMM>\n  const p = d.split('_');\n  const hm = p[2] || '';\n  if (UUID.test(p[1] || '') && /^\\d{4}$/.test(hm)) {\n    const h = +hm.slice(0, 2), m = +hm.slice(2);\n    if (h < 24 && m < 60 && m % 5 === 0) { out.act = 'add'; out.loc = p[1]; out.t = hm.slice(0, 2) + ':' + hm.slice(2); }\n  }\n} else if (d.startsWith('nd_') || d.startsWith('ne_')) {   // nd_<id>_<uuid> удалить, ne_<id>_<uuid> вкл/выкл\n  const p = d.split('_');\n  if (/^\\d{1,9}$/.test(p[1] || '') && UUID.test(p[2] || '')) { out.act = d.startsWith('nd_') ? 'del' : 'flip'; out.nid = p[1]; out.loc = p[2]; }\n}\nreturn [{ json: out }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        1536
+      ],
+      "id": "63b88b9e-2f7d-492b-be60-027a414b1c32",
+      "name": "Parse Notify Action"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH p AS (\n  SELECT $1::text AS act, $2::bigint AS tg, NULLIF($3, '')::uuid AS loc,\n         NULLIF($4, '')::time AS t, NULLIF($5, '')::int AS nid, NULLIF($6, '') AS tz\n),\nu AS (\n  INSERT INTO bot_users (telegram_id) SELECT tg FROM p ON CONFLICT (telegram_id) DO NOTHING\n),\nadd_n AS (\n  INSERT INTO notifications (telegram_id, location_id, notify_time)\n  SELECT p.tg, p.loc, p.t FROM p\n  WHERE p.act = 'add'\n    AND EXISTS (SELECT 1 FROM user_locations ul WHERE ul.telegram_id = p.tg AND ul.location_id = p.loc)\n    AND (SELECT count(*) FROM notifications n WHERE n.telegram_id = p.tg AND n.location_id = p.loc) < 5\n  ON CONFLICT DO NOTHING\n  RETURNING 1\n),\ndel_n AS (\n  DELETE FROM notifications n USING p\n  WHERE p.act = 'del' AND n.id = p.nid AND n.telegram_id = p.tg\n  RETURNING 1\n),\nflip AS (\n  UPDATE notifications n SET enabled = NOT n.enabled FROM p\n  WHERE p.act = 'flip' AND n.id = p.nid AND n.telegram_id = p.tg\n  RETURNING 1\n),\ntog AS (\n  UPDATE notifications n\n  SET enabled = NOT EXISTS (SELECT 1 FROM notifications x WHERE x.telegram_id = p.tg AND x.enabled)\n  FROM p\n  WHERE p.act = 'toggle' AND n.telegram_id = p.tg\n  RETURNING 1\n),\ntzs AS (\n  UPDATE bot_users b SET timezone = p.tz FROM p\n  WHERE p.act = 'tz' AND b.telegram_id = p.tg\n  RETURNING 1\n)\nSELECT (SELECT count(*) FROM add_n) AS added, (SELECT count(*) FROM del_n) AS deleted;",
+        "options": {
+          "queryReplacement": "={{ [ $json.act, $json.tg, $json.loc, $json.t, $json.nid, $json.tz ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -416,
+        1536
+      ],
+      "id": "e6f9dd1c-b45d-4574-8b42-56430e7fd00c",
+      "name": "Apply Notify Change",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT l.id, l.name AS city_name, l.kind, p.name AS parent_name,\n       COALESCE(b.notify_on, true) AS notify_on,\n       COALESCE(b.timezone, 'Europe/Moscow') AS tz,\n       COALESCE((SELECT json_agg(json_build_object('id', n.id, 't', to_char(n.notify_time, 'HH24:MI'), 'on', n.enabled) ORDER BY n.notify_time)\n                 FROM notifications n\n                 WHERE n.telegram_id = ul.telegram_id AND n.location_id = ul.location_id), '[]'::json) AS times\nFROM user_locations ul\nJOIN ru_locations l ON l.id = ul.location_id\nLEFT JOIN ru_locations p ON p.id = l.parent_id\nLEFT JOIN bot_users b ON b.telegram_id = ul.telegram_id\nWHERE ul.telegram_id = $1::bigint\nORDER BY ul.is_primary DESC, l.name\nLIMIT 100;",
+        "options": {
+          "queryReplacement": "={{ [ $('Telegram Trigger').first().json.callback_query.from.id ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -192,
+        1616
+      ],
+      "id": "4bfb08b4-ce04-487a-b0fb-921ae0b28ec3",
+      "name": "Get Notify Data",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const TZ = [\n  { id: 'Europe/Kaliningrad', label: 'Калининград (МСК-1)' },\n  { id: 'Europe/Moscow', label: 'Москва (МСК)' },\n  { id: 'Europe/Samara', label: 'Самара, Саратов (МСК+1)' },\n  { id: 'Asia/Yekaterinburg', label: 'Екатеринбург (МСК+2)' },\n  { id: 'Asia/Omsk', label: 'Омск (МСК+3)' },\n  { id: 'Asia/Krasnoyarsk', label: 'Красноярск, Новосибирск (МСК+4)' },\n  { id: 'Asia/Irkutsk', label: 'Иркутск (МСК+5)' },\n  { id: 'Asia/Yakutsk', label: 'Якутск (МСК+6)' },\n  { id: 'Asia/Vladivostok', label: 'Владивосток (МСК+7)' },\n  { id: 'Asia/Magadan', label: 'Магадан (МСК+8)' },\n  { id: 'Asia/Kamchatka', label: 'Камчатка (МСК+9)' }\n];\nconst cb = $('Telegram Trigger').first().json.callback_query;\nconst d = String(cb.data || '');\nconst rows = $input.all().map(i => i.json).filter(r => r && r.id);\nconst clean = s => String(s == null ? '' : s).replace(/[_*`\\[\\]]/g, ' ').trim();\nconst MAX = 5, PAGE = 5;\n\nconst timesOf = r => Array.isArray(r.times) ? r.times : JSON.parse(r.times || '[]');\nconst allTimes = rows.flatMap(timesOf);\nconst notifyOn = allTimes.some(t => t.on);   // включено, если включено хотя бы одно время в любом городе\nconst tzId = rows.length ? rows[0].tz : 'Europe/Moscow';\nconst tzLabel = (TZ.find(z => z.id === tzId) || { label: tzId }).label;\nconst titleOf = r => (['city_district', 'district'].includes(r.kind) && r.parent_name) ? `${r.city_name} (${r.parent_name})` : r.city_name;\nconst cut = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;\n\nlet mode = 'list', page = 0, locId = '', hh = '';\nif (d.startsWith('notify_')) page = parseInt(d.slice(7), 10) || 0;\nelse if (d === 'ntz') mode = 'tz';\nelse if (d.startsWith('nt_')) { mode = 'city'; locId = d.slice(3); }\nelse if (d.startsWith('na_')) { mode = 'hour'; locId = d.slice(3); }\nelse if (d.startsWith('nh_')) { const p = d.split('_'); mode = 'min'; locId = p[1]; hh = p[2] || ''; }\nelse if (d.startsWith('nm_')) { mode = 'city'; locId = d.split('_')[1]; }\nelse if (d.startsWith('nd_') || d.startsWith('ne_')) { mode = 'city'; locId = d.split('_')[2]; }\n\nconst city = rows.find(r => r.id === locId);\nif (['city', 'hour', 'min'].includes(mode) && !city) mode = 'list';\nif (mode === 'min' && !/^\\d{2}$/.test(hh)) mode = 'hour';\n\nlet text, kb = [];\n\nif (mode === 'tz') {\n  text = '🕒 Часовой пояс\\nВремя уведомлений считается по выбранному поясу:';\n  let row = [];\n  TZ.forEach((z, i) => {\n    row.push({ text: (z.id === tzId ? '✅ ' : '') + z.label, callback_data: `ntz_${i}` });\n    if (row.length === 2) { kb.push(row); row = []; }\n  });\n  if (row.length) kb.push(row);\n  kb.push([{ text: '⬅️ Назад', callback_data: 'notify' }]);\n\n} else if (mode === 'city') {\n  const times = timesOf(city);\n  text = `📍 ${clean(titleOf(city))}\\n\\n` +\n    (times.length ? `Времена (${times.length} из ${MAX}), 🟢 вкл / 🔴 выкл:\\n` + times.map(t => `${t.on ? '🟢' : '🔴'} ${t.t}`).join('\\n') : 'Уведомлений пока нет.') +\n    `\\n\\n🕒 Часовой пояс: ${clean(tzLabel)}` +\n    (times.length >= MAX ? '\\n\\nДостигнут лимит времён для этого города.' : '');\n  let row = [];\n  for (const t of times) {\n    kb.push([{ text: `${t.on ? '🟢 Вкл' : '🔴 Выкл'} · ${t.t}`, callback_data: `ne_${t.id}_${locId}` },\n             { text: '🗑 Удалить', callback_data: `nd_${t.id}_${locId}` }]);\n  }\n  if (times.length < MAX) kb.push([{ text: '➕ Добавить время', callback_data: `na_${locId}` }]);\n  kb.push([{ text: '⬅️ К списку', callback_data: 'notify' }]);\n\n} else if (mode === 'hour') {\n  text = `🕐 ${clean(titleOf(city))}\\nВыберите час (${clean(tzLabel)}):`;\n  let row = [];\n  for (let h = 0; h < 24; h++) {\n    const H = String(h).padStart(2, '0');\n    row.push({ text: `${H}:00`, callback_data: `nh_${locId}_${H}` });\n    if (row.length === 4) { kb.push(row); row = []; }\n  }\n  kb.push([{ text: '⬅️ Назад', callback_data: `nt_${locId}` }]);\n\n} else if (mode === 'min') {\n  text = `🕐 ${clean(titleOf(city))}\\nВыберите время (${clean(tzLabel)}):`;\n  let row = [];\n  for (let m = 0; m < 60; m += 5) {\n    const M = String(m).padStart(2, '0');\n    row.push({ text: `${hh}:${M}`, callback_data: `nm_${locId}_${hh}${M}` });\n    if (row.length === 4) { kb.push(row); row = []; }\n  }\n  kb.push([{ text: '⬅️ Другой час', callback_data: `na_${locId}` }]);\n\n} else if (rows.length === 0) {\n  text = '🔔 Уведомления\\n\\nСначала добавьте хотя бы один город.';\n  kb = [[{ text: '➕ Добавить город', callback_data: 'add_city' }], [{ text: '⬅️ Назад', callback_data: 'settings' }]];\n\n} else {\n  if (page * PAGE >= rows.length) page = 0;\n  const list = rows.slice(page * PAGE, page * PAGE + PAGE);\n  text = `🔔 Уведомления\\n\\nСтатус: ${notifyOn ? '🟢 включены' : '🔴 выключены'}\\n🕒 Часовой пояс: ${clean(tzLabel)}\\n\\nВыберите город, чтобы настроить время:`;\n  if (allTimes.length) kb.push([{ text: notifyOn ? '🔴 Выключить все' : '🟢 Включить все', callback_data: 'ntoggle' }]);\n  kb.push([{ text: `🕒 Пояс: ${tzLabel}`, callback_data: 'ntz' }]);\n  for (const r of list) {\n    const ts = timesOf(r).map(t => (t.on ? '🟢' : '🔴') + t.t).join(' ');\n    kb.push([{ text: cut(`📍 ${titleOf(r)} · ${ts || 'не настроено'}`, 60), callback_data: `nt_${r.id}` }]);\n  }\n  const nav = [];\n  if (page > 0) nav.push({ text: '⬅️ Назад', callback_data: `notify_${page - 1}` });\n  if ((page + 1) * PAGE < rows.length) nav.push({ text: 'Дальше ➡️', callback_data: `notify_${page + 1}` });\n  if (nav.length) kb.push(nav);\n  kb.push([{ text: '⚙️ Назад в настройки', callback_data: 'settings' }]);\n}\n\nreturn [{ json: { chat_id: cb.message.chat.id, text, reply_markup: { inline_keyboard: kb } } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        1616
+      ],
+      "id": "ea87e525-fbd3-4f46-aab5-a8c65855fe82",
+      "name": "Build Notify Screen"
+    },
+    {
+      "parameters": {
+        "operation": "editMessageText",
+        "chatId": "={{ $json.chat_id }}",
+        "messageId": "={{ $('Telegram Trigger').first().json.callback_query.message.message_id }}",
+        "text": "={{ $json.text }}",
+        "replyMarkup": "inlineKeyboardJSON",
+        "inlineKeyboardJSON": "={{ JSON.stringify($json.reply_markup.inline_keyboard) }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-telegram-dim.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        1616
+      ],
+      "id": "90c4170f-b02d-4223-ad48-bc69e2278161",
+      "name": "Show Notify Screen",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Main Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Main Router": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Action Router",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Location Router",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Back Button Router",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Settings Router",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Notify Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Popular Cities": {
+      "main": [
+        [
+          {
+            "node": "Build Cities Keyboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome": {
+      "main": [
+        [
+          {
+            "node": "Send Main Menu After Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Location Router": {
+      "main": [
+        [
+          {
+            "node": "Get Districts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save User Location",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Router": {
+      "main": [
+        [
+          {
+            "node": "Get Popular Cities",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get User Locations",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Show Settings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Location Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Back Button Router": {
+      "main": [
+        [
+          {
+            "node": "Edit To Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Districts": {
+      "main": [
+        [
+          {
+            "node": "Build Districts Keyboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Cities Keyboard": {
+      "main": [
+        [
+          {
+            "node": "Show Cities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Districts Keyboard": {
+      "main": [
+        [
+          {
+            "node": "Show Districts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save User Location": {
+      "main": [
+        [
+          {
+            "node": "Confirm Location Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get User Locations": {
+      "main": [
+        [
+          {
+            "node": "Build Weather List Keyboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Weather List Keyboard": {
+      "main": [
+        [
+          {
+            "node": "Show Weather List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Location Data": {
+      "main": [
+        [
+          {
+            "node": "Has Own Coords?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Own Coords?": {
+      "main": [
+        [
+          {
+            "node": "Get Weather (Open-Meteo)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Geocode Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Weather (Open-Meteo)": {
+      "main": [
+        [
+          {
+            "node": "Format Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Weather": {
+      "main": [
+        [
+          {
+            "node": "Show Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Geocode Nominatim": {
+      "main": [
+        [
+          {
+            "node": "Pick Nominatim Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Nominatim Result": {
+      "main": [
+        [
+          {
+            "node": "Nominatim Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Coords To DB": {
+      "main": [
+        [
+          {
+            "node": "Get Weather (Open-Meteo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Geocode Query": {
+      "main": [
+        [
+          {
+            "node": "Geocode Nominatim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nominatim Found?": {
+      "main": [
+        [
+          {
+            "node": "Save Coords To DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Geocode Open-Meteo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Geocode Open-Meteo": {
+      "main": [
+        [
+          {
+            "node": "Pick Open-Meteo Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Open-Meteo Result": {
+      "main": [
+        [
+          {
+            "node": "Open-Meteo Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open-Meteo Found?": {
+      "main": [
+        [
+          {
+            "node": "Save Coords To DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Has Parent Coords?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Parent Coords?": {
+      "main": [
+        [
+          {
+            "node": "Use Parent Coords",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Show Coords Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Parent Coords": {
+      "main": [
+        [
+          {
+            "node": "Get Weather (Open-Meteo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings Router": {
+      "main": [
+        [
+          {
+            "node": "Get Cities For Deletion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete User Location",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Cities For Deletion": {
+      "main": [
+        [
+          {
+            "node": "Build Delete List Keyboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Delete List Keyboard": {
+      "main": [
+        [
+          {
+            "node": "Show Delete List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete User Location": {
+      "main": [
+        [
+          {
+            "node": "Confirm Delete City",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Router": {
+      "main": [
+        [
+          {
+            "node": "Parse Notify Action",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Notify Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Notify Action": {
+      "main": [
+        [
+          {
+            "node": "Apply Notify Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Notify Change": {
+      "main": [
+        [
+          {
+            "node": "Get Notify Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Notify Data": {
+      "main": [
+        [
+          {
+            "node": "Build Notify Screen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Notify Screen": {
+      "main": [
+        [
+          {
+            "node": "Show Notify Screen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "609e824b00665571f6a6381130c664f746b0bb62dba57c9df8bd5baf812c788b"
+  }
+}

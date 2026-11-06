@@ -38,3 +38,7 @@ Thumbs.db
 # === Логи ===
 *.log
 logs/
+
+# === Данные (CSV) ===
+*.csv
+!sample_data.csv

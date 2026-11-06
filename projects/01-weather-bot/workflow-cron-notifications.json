@@ -1,0 +1,152 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        48
+      ],
+      "id": "710c70da-3365-41cf-aacb-e7397fe0c4ff",
+      "name": "Every Minute"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH due AS (\n  UPDATE notifications n\n  SET last_sent = (now() AT TIME ZONE b.timezone)::date\n  FROM bot_users b\n  WHERE b.telegram_id = n.telegram_id\n    AND b.notify_on\n    AND n.enabled\n    AND (now() AT TIME ZONE b.timezone) >= ((now() AT TIME ZONE b.timezone)::date + n.notify_time)\n    AND (now() AT TIME ZONE b.timezone) <  ((now() AT TIME ZONE b.timezone)::date + n.notify_time + interval '30 minutes')\n    AND n.last_sent IS DISTINCT FROM (now() AT TIME ZONE b.timezone)::date\n  RETURNING n.id AS notification_id, n.telegram_id, n.location_id\n)\nSELECT d.notification_id, d.telegram_id, l.id, l.name, l.kind, l.name_prep, l.lat, l.lon,\n       p.name AS parent_name, p.type_name AS parent_type, p.lat AS parent_lat, p.lon AS parent_lon,\n       (l.parent_id = l.region_id) AS parent_is_region,\n       r.name AS region_name, r.type_name AS region_type\nFROM due d\nJOIN ru_locations l ON l.id = d.location_id\nLEFT JOIN ru_locations p ON p.id = l.parent_id\nLEFT JOIN ru_locations r ON r.id = l.region_id;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        0,
+        48
+      ],
+      "id": "69549905-2173-4607-81d2-a2ff6452a746",
+      "name": "Claim Due Notifications",
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const WMO = {\n  0: ['☀️', 'Ясно'], 1: ['🌤', 'Преимущественно ясно'], 2: ['⛅', 'Переменная облачность'], 3: ['☁️', 'Пасмурно'],\n  45: ['🌫', 'Туман'], 48: ['🌫', 'Изморозевый туман'],\n  51: ['🌦', 'Лёгкая морось'], 53: ['🌦', 'Морось'], 55: ['🌧', 'Сильная морось'],\n  56: ['🌧', 'Ледяная морось'], 57: ['🌧', 'Сильная ледяная морось'],\n  61: ['🌦', 'Небольшой дождь'], 63: ['🌧', 'Дождь'], 65: ['🌧', 'Сильный дождь'],\n  66: ['🌧', 'Ледяной дождь'], 67: ['🌧', 'Сильный ледяной дождь'],\n  71: ['🌨', 'Небольшой снег'], 73: ['🌨', 'Снег'], 75: ['❄️', 'Сильный снег'], 77: ['🌨', 'Снежные зёрна'],\n  80: ['🌦', 'Небольшой ливень'], 81: ['🌧', 'Ливень'], 82: ['⛈', 'Сильный ливень'],\n  85: ['🌨', 'Небольшой снегопад'], 86: ['❄️', 'Сильный снегопад'],\n  95: ['⛈', 'Гроза'], 96: ['⛈', 'Гроза с градом'], 99: ['⛈', 'Сильная гроза с градом']\n};\nconst norm = s => String(s || '').toLowerCase().replace(/ё/g, 'е').trim();\nconst stem = s => norm(s).slice(0, 5).trim();\nconst clean = s => String(s == null ? '' : s).replace(/[_*`\\[\\]]/g, ' ').trim();\nconst sleep = ms => new Promise(r => setTimeout(r, ms));\nlet lastNominatim = 0;\n\nconst regionFull = (name, type) => {\n  const t = norm(type);\n  if (!name) return '';\n  if (t.startsWith('аобл')) return `${name} автономная область`;\n  if (t.startsWith('обл')) return `${name} область`;\n  if (t.startsWith('край')) return `${name} край`;\n  if (t.startsWith('респ')) return `Республика ${name}`;\n  if (t === 'ао') return `${name} автономный округ`;\n  return name;\n};\n\nasync function geocode(loc) {\n  const parts = [loc.name];\n  if (loc.parent_name && !loc.parent_is_region) parts.push(norm(loc.parent_type).startsWith('р-н') ? `${loc.parent_name} район` : loc.parent_name);\n  const region = regionFull(loc.region_name, loc.region_type);\n  if (region) parts.push(region);\n  const seen = new Set();\n  const q = parts.filter(p => { const k = norm(p); if (!k || seen.has(k)) return false; seen.add(k); return true; }).join(', ');\n\n  // 1) Nominatim (не чаще 1 запроса в секунду)\n  try {\n    const wait = 1100 - (Date.now() - lastNominatim);\n    if (wait > 0) await sleep(wait);\n    lastNominatim = Date.now();\n    const r = await this.helpers.httpRequest({ method: 'GET', url: 'https://nominatim.openstreetmap.org/search',\n      qs: { q, format: 'json', limit: 1, countrycodes: 'ru', 'accept-language': 'ru' },\n      headers: { 'User-Agent': 'WeatherBot/1.0' }, json: true, timeout: 10000 });\n    const f = Array.isArray(r) ? r[0] : null;\n    if (f && Number.isFinite(parseFloat(f.lat)) && Number.isFinite(parseFloat(f.lon)))\n      return { lat: parseFloat(f.lat), lon: parseFloat(f.lon), source: 'nominatim' };\n  } catch (e) {}\n\n  // 2) Open-Meteo Geocoding: то же имя и тот же регион\n  try {\n    const r = await this.helpers.httpRequest({ method: 'GET', url: 'https://geocoding-api.open-meteo.com/v1/search',\n      qs: { name: loc.name, count: 20, language: 'ru', format: 'json', countryCode: 'RU' }, json: true, timeout: 10000 });\n    let c = (Array.isArray(r.results) ? r.results : []).filter(x => norm(x.name) === norm(loc.name));\n    if (loc.region_name) c = c.filter(x => norm(x.admin1).includes(stem(loc.region_name)));\n    const pn = (!loc.parent_is_region && norm(loc.parent_type).startsWith('р-н')) ? loc.parent_name : '';\n    if (pn) { const bp = c.filter(x => norm(x.admin2).includes(stem(pn))); if (bp.length) c = bp; }\n    if (c.length && Number.isFinite(c[0].latitude) && Number.isFinite(c[0].longitude))\n      return { lat: c[0].latitude, lon: c[0].longitude, source: 'open-meteo' };\n  } catch (e) {}\n  return null;\n}\n\nconst out = [];\nfor (const it of $input.all()) {\n  const loc = it.json;\n  let lat = loc.lat, lon = loc.lon, source = '', save = false, usedParent = false;\n\n  if (lat === null || lat === undefined) {\n    const g = await geocode.call(this, loc);\n    if (g) { lat = g.lat; lon = g.lon; source = g.source; save = true; }\n    else if (loc.parent_lat !== null && loc.parent_lat !== undefined) { lat = loc.parent_lat; lon = loc.parent_lon; usedParent = true; }\n    else continue;\n  }\n\n  let cw = null;\n  for (let attempt = 0; attempt < 2 && !cw; attempt++) {\n    try {\n      const r = await this.helpers.httpRequest({ method: 'GET', url: 'https://api.open-meteo.com/v1/forecast',\n        qs: { latitude: lat, longitude: lon, current_weather: true }, json: true, timeout: 10000 });\n      if (r && r.current_weather && r.current_weather.temperature !== undefined) cw = r.current_weather;\n    } catch (e) { await sleep(1500); }\n  }\n  if (!cw) continue;\n\n  const temp = Math.round(cw.temperature), wind = Math.round(cw.windspeed);\n  const [emoji, desc] = WMO[cw.weathercode] || ['🌡', `Код погоды ${cw.weathercode}`];\n  const title = loc.name_prep ? `Погода ${clean(loc.name_prep)}` : `Погода: ${clean(loc.name)}`;\n  let suffix = '';\n  if (loc.parent_name && !loc.parent_is_region && ['city_district', 'locality', 'settlement', 'district'].includes(loc.kind)) {\n    suffix = ` (${clean(loc.parent_name)}${norm(loc.parent_type).startsWith('р-н') ? ' район' : ''})`;\n  }\n  let text = `🔔 *${title}${suffix}*\\n\\n${emoji} ${desc}, ${temp > 0 ? '+' : ''}${temp}°C\\n💨 Ветер: ${wind} км/ч`;\n  if (usedParent) text += `\\n\\n_ℹ️ Координаты района не найдены, показана погода по городу._`;\n\n  out.push({ json: { chat_id: loc.telegram_id, text, id: loc.id, lat, lon, source, save_coords: save } });\n}\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        48
+      ],
+      "id": "c84c0e29-af63-4352-b669-9f89cc80cc35",
+      "name": "Fetch Weather"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        -32
+      ],
+      "id": "b3dc208e-7c0c-4b7c-931a-a57629a72d2c",
+      "name": "Send Weather Notification",
+      "webhookId": "6f2bcead-505a-4678-a857-fd86cef5a244",
+      "credentials": {
+        "telegramApi": {
+          "id": "wV0J3WxBWKkrfMR0",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE ru_locations\nSET lat = $2::float8, lon = $3::float8, coord_source = $4, updated_at = now()\nWHERE id = $1::uuid AND $5::boolean AND lat IS NULL\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ [ $json.id, $json.lat, $json.lon, $json.source, $json.save_coords ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        480,
+        160
+      ],
+      "id": "6a341b87-25da-4bb8-b193-f7117de8a6b6",
+      "name": "Save New Coords",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "GIcsXcHw4VI3qrlm",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every Minute": {
+      "main": [
+        [
+          {
+            "node": "Claim Due Notifications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim Due Notifications": {
+      "main": [
+        [
+          {
+            "node": "Fetch Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Weather": {
+      "main": [
+        [
+          {
+            "node": "Send Weather Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save New Coords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "609e824b00665571f6a6381130c664f746b0bb62dba57c9df8bd5baf812c788b"
+  }
+}
